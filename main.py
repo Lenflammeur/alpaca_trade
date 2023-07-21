@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 main algorithmic trading script via Alpaca API
 """

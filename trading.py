@@ -4,7 +4,10 @@ script for the trading strategy
 import pandas as pd
 import boto3
 
-sns = boto3.client('sns')
+sns = boto3.client('sns', region_name='us-east-1')
+response = sns.publish(
+    TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message="Connected to SNS"
+)
 
 def update_dataframe(df, bar):
     """
@@ -25,7 +28,11 @@ def check_crossover(df, bar, api):
     long_avg = df[df['symbol'] == bar['S']]['price'].rolling(window=20).mean()
 
     if len(short_avg) > 20:  # ensure we have enough data for the long moving average
-        print("We have enough data for long moving average")
+        if len(short_avg) == 21:
+            print("We have enough data for long moving average")
+            response = sns.publish(
+                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message="We have enough data for long moving average"
+            )
         if short_avg.iloc[-1] > long_avg.iloc[-1] and short_avg.iloc[-2] < long_avg.iloc[-2]:
             # Buy when the short moving average crosses above the long moving average
             api.submit_order(
@@ -38,8 +45,7 @@ def check_crossover(df, bar, api):
             print(f"Submitted buy order for {bar['S']}")
             # After submitting the order, publish a message to SNS
             response = sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:123456789012:MyTopic',    # TODO: replace with your actual ARN
-                Message=f"Submitted buy order for {bar['S']}",    # TODO: replace with your actual message
+                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"Submitted buy order for {bar['S']}"
             )
 
         elif short_avg.iloc[-1] < long_avg.iloc[-1] and short_avg.iloc[-2] > long_avg.iloc[-2]:
@@ -54,6 +60,5 @@ def check_crossover(df, bar, api):
             print(f"Submitted sell order for {bar['S']}")
             # After submitting the order, publish a message to SNS
             response = sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:123456789012:MyTopic',    # TODO: replace with your actual ARN
-                Message=f"Submitted sell order for {bar['S']}",    # TODO: replace with your actual message
+                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders',  Message=f"Submitted sell order for {bar['S']}"
             )
