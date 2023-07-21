@@ -1,0 +1,9 @@
+# Set your Alpaca API credentials
+APCA_API_BASE_URL = 'https://paper-api.alpaca.markets'  # Use the paper trading API URL for testing
+APCA_API_KEY_ID = 'PKBPIU2CAMY9RMU0NVMV'
+APCA_API_SECRET_KEY = 'S1Pr6ukwVZ3vf8nTEbT7bnZf1ts97MEcoxBXoPXF'
+
+
+{"action": "auth", "key": "PKBPIU2CAMY9RMU0NVMV", "secret": "S1Pr6ukwVZ3vf8nTEbT7bnZf1ts97MEcoxBXoPXF"}
+
+{"action":"subscribe","bars":["AAPL"]}
