@@ -37,7 +37,7 @@ def check_crossover(df, bar, api):
             # Buy when the short moving average crosses above the long moving average
             api.submit_order(
                 symbol=bar['S'],
-                qty=1,
+                qty=100,
                 side='buy',
                 type='market',
                 time_in_force='gtc',
@@ -45,14 +45,14 @@ def check_crossover(df, bar, api):
             print(f"Submitted buy order for {bar['S']}")
             # After submitting the order, publish a message to SNS
             response = sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"Submitted buy order for {bar['S']}"
+                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"Submitted buy order for {bar['S']} at {bar['c']}"
             )
 
         elif short_avg.iloc[-1] < long_avg.iloc[-1] and short_avg.iloc[-2] > long_avg.iloc[-2]:
             # Sell when the short moving average crosses below the long moving average
             api.submit_order(
                 symbol=bar['S'],
-                qty=1,
+                qty=100,
                 side='sell',
                 type='market',
                 time_in_force='gtc',
@@ -60,5 +60,5 @@ def check_crossover(df, bar, api):
             print(f"Submitted sell order for {bar['S']}")
             # After submitting the order, publish a message to SNS
             response = sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders',  Message=f"Submitted sell order for {bar['S']}"
+                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders',  Message=f"Submitted sell order for {bar['S']} at {bar['c']}"
             )

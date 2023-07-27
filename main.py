@@ -13,7 +13,7 @@ from trading import update_dataframe, check_crossover
 api = REST(config.API_KEY, config.SECRET_KEY, base_url=config.BASE_URL)
 
 # Create a DataFrame to hold our data
-df = pd.DataFrame(columns=['MSFT', 'AAPL'])
+df = pd.DataFrame(columns=['MSFT', 'AAPL', 'SPY', 'QQQ', 'NVDA'])
 
 def on_message(ws, message):
     global df
