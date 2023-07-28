@@ -43,6 +43,31 @@ def check_crossover(df, bar, api):
                 time_in_force='gtc',
             )
             print(f"Submitted buy order for {bar['S']}")
+            
+            # Calculate our static stop loss and take profit prices
+            stop_loss_price = round(bar['c'] * 0.99, 2)
+            take_profit_price = round(bar['c'] * 1.02, 2)
+
+            # Submit the stop loss order
+            api.submit_order(
+                symbol=bar['S'],
+                qty=100,
+                side='sell',
+                type='stop',
+                stop_price=stop_loss_price,
+                time_in_force='gtc',
+            )
+
+            # Submit the take profit order
+            api.submit_order(
+                symbol=bar['S'],
+                qty=100,
+                side='sell',
+                type='limit',
+                limit_price=take_profit_price,
+                time_in_force='gtc',
+            )
+
             # After submitting the order, publish a message to SNS
             response = sns.publish(
                 TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"Submitted buy order for {bar['S']} at {bar['c']}"

@@ -13,14 +13,13 @@ from trading import update_dataframe, check_crossover
 api = REST(config.API_KEY, config.SECRET_KEY, base_url=config.BASE_URL)
 
 # Create a DataFrame to hold our data
-df = pd.DataFrame(columns=['MSFT', 'AAPL', 'SPY', 'QQQ', 'NVDA'])
+df = pd.DataFrame(columns=['MSFT', 'AAPL', 'SPY', 'QQQ', 'NVDA', 'TSLA', 'AMZN'])
 
 def on_message(ws, message):
     global df
     message_data = json.loads(message)
     for bar in message_data:
         df = update_dataframe(df, bar)
-        print(f"{bar['S']} price updated: {bar['c']}")
         check_crossover(df, bar, api)
 
 def on_open(ws):
@@ -31,7 +30,7 @@ def on_open(ws):
         "secret": config.SECRET_KEY
     }
     ws.send(json.dumps(auth_data))
-    stream_message = {"action":"subscribe","bars":["AAPL", "MSFT"]}
+    stream_message = {"action":"subscribe","bars":['MSFT', 'AAPL', 'SPY', 'QQQ', 'NVDA', 'TSLA', 'AMZN']}
     ws.send(json.dumps(stream_message))
 
 def on_close(ws):
