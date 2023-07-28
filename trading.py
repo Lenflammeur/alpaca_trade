@@ -29,9 +29,9 @@ def check_crossover(df, bar, api):
 
     if len(short_avg) > 20:  # ensure we have enough data for the long moving average
         if len(short_avg) == 21:
-            print("We have enough data for long moving average")
+            #print("We have enough data for long moving average")
             response = sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message="We have enough data for long moving average"
+                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"We have enough data of {bar['S']} for long moving average"
             )
         if short_avg.iloc[-1] > long_avg.iloc[-1] and short_avg.iloc[-2] < long_avg.iloc[-2]:
             # Buy when the short moving average crosses above the long moving average
@@ -42,7 +42,7 @@ def check_crossover(df, bar, api):
                 type='market',
                 time_in_force='gtc',
             )
-            print(f"Submitted buy order for {bar['S']}")
+            #print(f"Submitted buy order for {bar['S']}")
             
             # Calculate our static stop loss and take profit prices
             stop_loss_price = round(bar['c'] * 0.99, 2)
@@ -82,7 +82,7 @@ def check_crossover(df, bar, api):
                 type='market',
                 time_in_force='gtc',
             )
-            print(f"Submitted sell order for {bar['S']}")
+            #print(f"Submitted sell order for {bar['S']}")
             # After submitting the order, publish a message to SNS
             response = sns.publish(
                 TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders',  Message=f"Submitted sell order for {bar['S']} at {bar['c']}"
