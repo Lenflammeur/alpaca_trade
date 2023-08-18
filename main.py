@@ -7,7 +7,6 @@ import pandas as pd
 import websocket
 from alpaca_trade_api import REST
 import config
-import boto3
 from trading import update_dataframe, pair_trading
 
 # Create an Alpaca API instance
@@ -21,7 +20,7 @@ def on_message(ws, message):
     message_data = json.loads(message)
     for bar in message_data:
         df = update_dataframe(df, bar)
-        pair_trading(df, bar, api)
+        pair_trading(df, api)
 
 def on_open(ws):
     print("opened")

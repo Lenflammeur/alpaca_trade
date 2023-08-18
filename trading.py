@@ -23,7 +23,7 @@ def update_dataframe(df, bar):
     })
     return pd.concat([df, new_data], ignore_index=True)
 
-def pair_trading(df, bar, api):
+def pair_trading(df, api):
     """
     pair trading strategy with Apple and Microsoft
     """
@@ -37,7 +37,7 @@ def pair_trading(df, bar, api):
     if len(df) == lookback:
             #print("We have enough data for long moving average")
             response = sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"We have enough data for pair trading strategy"
+                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message="We have enough data for pair trading strategy"
             )
 
     aapl_prices = df[df['symbol'] == 'AAPL']['price']
