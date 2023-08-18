@@ -9,6 +9,9 @@ response = sns.publish(
     TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message="Connected to SNS"
 )
 
+lookback = 120
+threshold = 1.5
+
 def update_dataframe(df, bar):
     """
     update the df with the new bar fetched at 1min interval
@@ -20,70 +23,84 @@ def update_dataframe(df, bar):
     })
     return pd.concat([df, new_data], ignore_index=True)
 
-def check_crossover(df, bar, api):
+def pair_trading(df, bar, api):
     """
-    Simple Moving Average strategy
+    pair trading strategy with Apple and Microsoft
     """
-    short_avg = df[df['symbol'] == bar['S']]['price'].rolling(window=5).mean()
-    long_avg = df[df['symbol'] == bar['S']]['price'].rolling(window=20).mean()
-
-    if len(short_avg) > 20:  # ensure we have enough data for the long moving average
-        if len(short_avg) == 21:
+    if len(df) < lookback:
+        return
+    
+    if len(df) == lookback:
             #print("We have enough data for long moving average")
             response = sns.publish(
                 TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"We have enough data of {bar['S']} for long moving average"
             )
-        if short_avg.iloc[-1] > long_avg.iloc[-1] and short_avg.iloc[-2] < long_avg.iloc[-2]:
-            # Buy when the short moving average crosses above the long moving average
-            api.submit_order(
-                symbol=bar['S'],
-                qty=100,
-                side='buy',
-                type='market',
-                time_in_force='gtc',
-            )
-            #print(f"Submitted buy order for {bar['S']}")
-            
-            # Calculate our static stop loss and take profit prices
-            stop_loss_price = round(bar['c'] * 0.99, 2)
-            take_profit_price = round(bar['c'] * 1.02, 2)
 
-            # Submit the stop loss order
-            api.submit_order(
-                symbol=bar['S'],
-                qty=100,
-                side='sell',
-                type='stop',
-                stop_price=stop_loss_price,
-                time_in_force='gtc',
-            )
+    aapl_prices = df[df['symbol'] == 'AAPL']['price']
+    msft_prices = df[df['symbol'] == 'MSFT']['price']
 
-            # Submit the take profit order
-            api.submit_order(
-                symbol=bar['S'],
-                qty=100,
-                side='sell',
-                type='limit',
-                limit_price=take_profit_price,
-                time_in_force='gtc',
-            )
+    spread = aapl_prices - msft_prices
+    mean_spread = spread.rolling(window=lookback).mean()
+    std_spread = spread.rolling(window=lookback).std()
+    z_score = (spread - mean_spread) / std_spread
 
-            # After submitting the order, publish a message to SNS
-            response = sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"Submitted buy order for {bar['S']} at {bar['c']}"
-            )
+    portfolio_value = api.get_account().cash
 
-        elif short_avg.iloc[-1] < long_avg.iloc[-1] and short_avg.iloc[-2] > long_avg.iloc[-2]:
-            # Sell when the short moving average crosses below the long moving average
-            api.submit_order(
-                symbol=bar['S'],
-                qty=100,
-                side='sell',
-                type='market',
-                time_in_force='gtc',
-            )
-            #print(f"Submitted sell order for {bar['S']}")
-            # After submitting the order, publish a message to SNS
-            response = sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders',  Message=f"Submitted sell order for {bar['S']} at {bar['c']}"
-            )
+    qty_aapl = int(0.5 * portfolio_value / aapl_prices.iloc[-1])
+    qty_msft = int(0.5 * portfolio_value / msft_prices.iloc[-1])
+
+    if z_score[-1] > threshold:
+        api.submit_order(
+            symbol='AAPL',
+            qty=qty_aapl,
+            side='sell',
+            type='market',
+            time_in_force='gtc',
+        )
+        api.submit_order(
+            symbol='MSFT',
+            qty=qty_msft,
+            side='buy',
+            type='market',
+            time_in_force='gtc',
+        )
+        # After submitting the order, publish a message to SNS
+        response = sns.publish(
+            TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"Submitted {qty_aapl} sell for AAPL & {qty_msft} buy for MSFT"
+        )
+    elif z_score[-1] < -threshold:
+        api.submit_order(
+            symbol='AAPL',
+            qty=qty_aapl,
+            side='buy',
+            type='market',
+            time_in_force='gtc',
+        )
+        api.submit_order(
+            symbol='MSFT',
+            qty=qty_msft,
+            side='sell',
+            type='market',
+            time_in_force='gtc',
+        )
+        response = sns.publish(
+            TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"Submitted {qty_aapl} buy for AAPL & {qty_msft} sell for MSFT"
+        )
+    elif abs(z_score[-1]) < 0.5:
+        api.submit_order(
+            symbol='AAPL',
+            qty=qty_aapl,
+            side='sell',
+            type='market',
+            time_in_force='gtc',
+        )
+        api.submit_order(
+            symbol='MSFT',
+            qty=qty_msft,
+            side='sell',
+            type='market',
+            time_in_force='gtc',
+        )
+        response = sns.publish(
+            TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"Submitted {qty_aapl} sell for AAPL & {qty_msft} sell for MSFT"
+        )

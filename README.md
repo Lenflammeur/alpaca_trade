@@ -1,6 +1,6 @@
 # Automated Stock Trading Application with AWS 
 
-This project is an automated stock trading application that uses a simple moving average crossover strategy to place trades. The application is dockerized and deployed on AWS ECS/EKS, with scheduled runs managed by AWS EventBridge. It also uses AWS SNS for sending trade notifications.
+This project is an automated stock trading application that uses a pair trading strategy to place trades. The application is dockerized and deployed on AWS ECS/EKS, with scheduled runs managed by AWS EventBridge. It also uses AWS SNS for sending trade notifications.
 
 ## Project Structure
 
