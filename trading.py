@@ -28,12 +28,16 @@ def pair_trading(df, bar, api):
     pair trading strategy with Apple and Microsoft
     """
     if len(df) < lookback:
+        if lookback % 10 == 0:
+             response = sns.publish(
+                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"We have {lookback} lookback"
+            )
         return
     
     if len(df) == lookback:
             #print("We have enough data for long moving average")
             response = sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"We have enough data of {bar['S']} for long moving average"
+                TopicArn='arn:aws:sns:us-east-1:429690615505:MyOrders', Message=f"We have enough data for pair trading strategy"
             )
 
     aapl_prices = df[df['symbol'] == 'AAPL']['price']
